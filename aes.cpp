@@ -245,8 +245,18 @@ unsigned int gfMultiplyBy02(unsigned int value) {
 unsigned int gfMultiplyBy03(unsigned int value) {
     return gfMultiplyBy02(value) ^ value;  // 0x03 = 0x02 ^ 0x01
 }
+unsigned int gfMultiply(unsigned int a, unsigned int b) {
+    unsigned int result = 0;
+    for (int i = 0; i < 8; i++) {
+        if (b & 1) result ^= a;
+        a = gfMultiplyBy02(a);
+        b >>= 1;
+    }
+    return result & 0xFF;
+}
 // Galois Field 乘法函數，用於乘以 0x09
 unsigned int gfMultiplyBy09(unsigned int value) {
+    return gfMultiply(value, 0x09);
     unsigned int result = gfMultiplyBy03(value);// 左移一位，相當於將 value 乘以 2。結果存儲在 result 中
     unsigned int result2 = gfMultiplyBy03(result);
     if (result2 & 0x100) {  // 檢查是否超過 8 位
@@ -256,6 +266,7 @@ unsigned int gfMultiplyBy09(unsigned int value) {
 }
 // Galois Field 乘法函數，用於乘以 10
 unsigned int gfMultiplyBy0A(unsigned int value) {
+    return gfMultiply(value, 0x0A);
     unsigned int result = gfMultiplyBy09(value);// 左移一位，相當於將 value 乘以 2。結果存儲在 result 中
     unsigned int result2=binaryAddition(result,value);
     if (result2 & 0x100) {  // 檢查是否超過 8 位
@@ -265,6 +276,7 @@ unsigned int gfMultiplyBy0A(unsigned int value) {
 }
 // Galois Field 乘法函數，用於乘以 11
 unsigned int gfMultiplyBy0B(unsigned int value) {
+    return gfMultiply(value, 0x0B);
     unsigned int result = gfMultiplyBy0A(value);// 左移一位，相當於將 value 乘以 2。結果存儲在 result 中
     unsigned int result2=binaryAddition(result,value);
     if (result2 & 0x100) {  // 檢查是否超過 8 位
@@ -274,6 +286,7 @@ unsigned int gfMultiplyBy0B(unsigned int value) {
 }
 // Galois Field 乘法函數，用於乘以 0x13
 unsigned int gfMultiplyBy0D(unsigned int value) {
+    return gfMultiply(value, 0x0D);
     unsigned int result = gfMultiplyBy02(value);// 左移一位，相當於將 value 乘以 2。結果存儲在 result 中
     unsigned int result2 = gfMultiplyBy03(result);
     unsigned int result3 = gfMultiplyBy03(result2);
@@ -285,6 +298,7 @@ unsigned int gfMultiplyBy0D(unsigned int value) {
 }
 // Galois Field 乘法函數，用於乘以 0x14
 unsigned int gfMultiplyBy0E(unsigned int value) {
+    return gfMultiply(value, 0x0E);
     unsigned int result = gfMultiplyBy0D(value);// 左移一位，相當於將 value 乘以 2。結果存儲在 result 中
     unsigned int result2=binaryAddition(result,value);
     if (result2 & 0x100) {  // 檢查是否超過 8 位
@@ -302,8 +316,8 @@ for (int i = 0; i < 4; i++) {
 for (int i = 0;i < 4;i++) { 
 state[0][i]= gfMultiplyBy02(previous_state[0][i]) ^ gfMultiplyBy03(previous_state[1][i]) ^ previous_state[2][i] ^ previous_state[3][i];
 state[1][i]= gfMultiplyBy02(previous_state[1][i]) ^ gfMultiplyBy03(previous_state[2][i]) ^ previous_state[0][i] ^ previous_state[3][i];
-state[0][i]= gfMultiplyBy02(previous_state[2][i]) ^ gfMultiplyBy03(previous_state[3][i]) ^ previous_state[0][i] ^ previous_state[1][i];
-state[0][i]= gfMultiplyBy02(previous_state[3][i]) ^ gfMultiplyBy03(previous_state[0][i]) ^ previous_state[1][i] ^ previous_state[2][i];
+state[2][i]= gfMultiplyBy02(previous_state[2][i]) ^ gfMultiplyBy03(previous_state[3][i]) ^ previous_state[0][i] ^ previous_state[1][i];
+state[3][i]= gfMultiplyBy02(previous_state[3][i]) ^ gfMultiplyBy03(previous_state[0][i]) ^ previous_state[1][i] ^ previous_state[2][i];
 }
 }
 void InverseMixColumns()
@@ -315,9 +329,9 @@ for (int i = 0; i < 4; i++) {
     }
 for (int i = 0;i < 4;i++) { 
 state[0][i]= gfMultiplyBy0E(previous_state[0][i]) ^ gfMultiplyBy0B(previous_state[1][i]) ^ gfMultiplyBy0D(previous_state[2][i]) ^gfMultiplyBy09(previous_state[3][i]);
-state[1][i]= gfMultiplyBy09(previous_state[1][i]) ^ gfMultiplyBy0E(previous_state[2][i]) ^ gfMultiplyBy0B(previous_state[0][i]) ^gfMultiplyBy0D(previous_state[3][i]);
-state[0][i]= gfMultiplyBy0D(previous_state[2][i]) ^ gfMultiplyBy09(previous_state[3][i]) ^ gfMultiplyBy0E(previous_state[0][i]) ^gfMultiplyBy0B(previous_state[1][i]);
-state[0][i]= gfMultiplyBy0B(previous_state[3][i]) ^ gfMultiplyBy0D(previous_state[0][i]) ^ gfMultiplyBy09(previous_state[1][i]) ^gfMultiplyBy0E(previous_state[2][i]);
+state[1][i]= gfMultiplyBy09(previous_state[0][i]) ^ gfMultiplyBy0E(previous_state[1][i]) ^ gfMultiplyBy0B(previous_state[2][i]) ^gfMultiplyBy0D(previous_state[3][i]);
+state[2][i]= gfMultiplyBy0D(previous_state[0][i]) ^ gfMultiplyBy09(previous_state[1][i]) ^ gfMultiplyBy0E(previous_state[2][i]) ^gfMultiplyBy0B(previous_state[3][i]);
+state[3][i]= gfMultiplyBy0B(previous_state[0][i]) ^ gfMultiplyBy0D(previous_state[1][i]) ^ gfMultiplyBy09(previous_state[2][i]) ^gfMultiplyBy0E(previous_state[3][i]);
 }
 }
      
@@ -372,6 +386,9 @@ void decrypt(){
     InverseShiftRow();
     InverseSubBytes();
     AddRoundKey(0);
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            output[i * 4 + j] = state[j][i];
 }
 
 
@@ -492,6 +509,10 @@ int main(){
                 else
                 read_round++;
 
+                for (int i = 0; i < 16; i++) {
+                    input[i] = static_cast<unsigned char>(plaintext_block[i]);
+                }
+
                 // 在這裡你可以對 plaintext_block 做任何你需要的處理
                 // 例如，將 plaintext_block 傳遞給加密函式進行處理
                 if(encrypt==1){
@@ -553,11 +574,8 @@ int main(){
             printf("------------------------------------------------\n");
             printf("decryption process complete !! \n");
         }
-        ofstream myFile;
-        myFile.open(output_file);
-        for(int i=0;i<16;i++){
-            myFile<<output[i];
-        }
+        ofstream myFile(output_file, ios::binary);
+        myFile.write(reinterpret_cast<const char*>(output), 16);
         myFile.close();
 
 }
